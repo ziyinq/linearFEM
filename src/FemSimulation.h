@@ -8,15 +8,21 @@
 template<class T, int dim>
 class FemSimulation{
 public:
-    std::vector<Eigen::Matrix<int,dim+1,1>> mesh;
-    std::vector<Eigen::Matrix<T,dim,1>> positions;
-    std::vector<Eigen::Matrix<T,dim,1>> velocities;
-    std::vector<T> mass;
-
+    using TV = Eigen::Matrix<T,dim,1>;
+    using TM = Eigen::Matrix<T,dim,dim>;
     FemSimulation(){}
     ~FemSimulation(){}
 
     void initialize();
+    void precomputation();
     void createMesh();
     void writeFile();
+private:
+    std::vector<Eigen::Matrix<int, dim + 1, 1>> mesh;
+    std::vector<TV> positions;
+    std::vector<TV> velocities;
+    std::vector<T> mass;
+
+    std::vector<TM> Bm;
+    std::vector<T> W;
 };

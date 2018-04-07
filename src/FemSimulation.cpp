@@ -6,7 +6,24 @@ void FemSimulation<T,dim>::initialize(){
 }
 
 template<class T, int dim>
+void FemSimulation<T,dim>::precomputation(){
+    // precompute Bm and W
+    // valid for 2D and 3D
+    for (auto X : mesh){
+        TM Dm = TM::Zero();
+        for (int i = 0; i < dim; i++){
+            Dm.col(i) = positions[X(i)] - positions[X(dim)];
+        }
+        Bm.push_back(Dm.inverse());
+        T thisW = Dm.determinant();
+        if (thisW < 0.f) thisW *= -1;
+        W.push_back(thisW);
+    }
+}
+
+template<class T, int dim>
 void FemSimulation<T,dim>::createMesh(){
+    // TODO: not valid for 3D
     int xdim = 10;
     int ydim = 4;
     T dx = 1.f / xdim;
@@ -15,7 +32,7 @@ void FemSimulation<T,dim>::createMesh(){
     // generate points for mesh
     for(int i = 0; i < xdim; i++){
         for (int j = 0; j < ydim; j++){
-            Eigen::Matrix<T,dim,1> point(i*dx, j*dy);
+            TV point(i*dx, j*dy);
             positions.push_back(point);
         }
     }
@@ -29,8 +46,8 @@ void FemSimulation<T,dim>::createMesh(){
             int b = i*ydim + j+1;
             int c = (i+1)*ydim + j+1;
             int d = (i+1)*ydim + j;
-            Eigen::Matrix<int, dim+1, 1> first(a, b, d);
-            Eigen::Matrix<int, dim+1, 1> second(b, c, d);
+            Eigen::Matrix<int, dim + 1, 1> first(a, b, d);
+            Eigen::Matrix<int, dim + 1, 1> second(b, c, d);
             mesh.push_back(first);
             mesh.push_back(second);
         }
@@ -39,6 +56,7 @@ void FemSimulation<T,dim>::createMesh(){
 
 template<class T, int dim>
 void FemSimulation<T,dim>::writeFile(){
+    // valid for 2D and 3D
     Partio::ParticlesDataMutable *parts = Partio::create();
     Partio::ParticleAttribute posH;
     // mH = parts->addAttribute("m", Partio::VECTOR, 1);
