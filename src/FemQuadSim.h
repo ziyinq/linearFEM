@@ -5,14 +5,15 @@
 #include <vector>
 #include <fstream>
 
-template<class T, int dim>
-class FemSimulation{
-public:
-    using TV = Eigen::Matrix<T,dim,1>;
-    using TM = Eigen::Matrix<T,dim,dim>;
+template <class T, int dim>
+class FemQuadSim
+{
+  public:
+    using TV = Eigen::Matrix<T, dim, 1>;
+    using TM = Eigen::Matrix<T, dim, dim>;
 
-    FemSimulation(){}
-    ~FemSimulation(){}
+    FemQuadSim() {}
+    ~FemQuadSim() {}
 
     void createMesh();
     void initialize();
@@ -22,7 +23,7 @@ public:
     TM linearPiola(TM F);
 
   private:
-    std::vector<Eigen::Matrix<int, dim + 1, 1>> mesh;
+    std::vector<Eigen::Matrix<int, 6, 1>> mesh;
     std::vector<TV> positions;
     std::vector<TV> velocities;
     std::vector<TV> force;
@@ -38,7 +39,7 @@ public:
     TV gravity = TV(0, -9.8);
 
     // simulation settings
-    T dt = 1e-3;
+    T dt = 5e-4;
     int numSteps = 300;
 
     // Young's modulus and Poisson's ratio

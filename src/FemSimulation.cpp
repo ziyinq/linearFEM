@@ -5,8 +5,8 @@ void FemSimulation<T,dim>::createMesh(){
     // TODO: not valid for 3D
     int xdim = 10;
     int ydim = 4;
-    T dx = width / xdim;
-    T dy = height / ydim;
+    T dx = width / (xdim-1);
+    T dy = height / (ydim-1);
 
     // generate points for mesh
     for(int i = 0; i < xdim; i++){
@@ -67,9 +67,9 @@ void FemSimulation<T,dim>::startSimulation(){
     std::cout << "======Simulation Starts!=====" << std::endl;
     createMesh();
     initialize();
-    for (int i = 0; i < numSteps; i++){
+    for (int step = 0; step < numSteps; step++){
         // reset force to be gravity
-        std::fill(force.begin(), force.end(), gravity);
+        std::fill(force.begin(), force.end(), TV::Zero());
 
         // calculate force
         for (size_t i = 0; i < mesh.size(); i++){
@@ -91,14 +91,14 @@ void FemSimulation<T,dim>::startSimulation(){
 
         // update velocity and advect node
         advection();
-        writeFrame(i);
+        writeFrame(step);
     }
 }
 
 template<class T, int dim>
 void FemSimulation<T,dim>::advection(){
     for (size_t i = 0; i < positions.size(); i++){
-        velocities[i] += dt * force[i];
+        velocities[i] += dt * (force[i] / mass[i] + gravity);
     }
 
     // fix boundary velocity to be 0
