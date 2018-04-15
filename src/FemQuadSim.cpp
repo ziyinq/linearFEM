@@ -46,11 +46,12 @@ void FemQuadSim<T, dim>::createMesh()
             Eigen::Matrix<int, 6, 1> first;
             first << a, f, k, e, c, b;
             Eigen::Matrix<int, 6, 1> second;
-            second << k, h, g, d, c, e;
+            second << g, d, c, e, k, h;
             mesh.push_back(first);
             mesh.push_back(second);
         }
     }
+    std::cout << mesh[3] << std::endl;
 
     auto size = positions.size();
     mass.resize(size);
@@ -105,20 +106,27 @@ void FemQuadSim<T, dim>::startSimulation()
             TM F = Ds * DmInv[i];
             TM P = linearPiola(F);
             // calculate 6 force vector
-            TM DmInvT = DmInv[i].transpose();
-            TV H0 = -3.f * W[i] * P * DmInvT.col(0);
-            TV H1 = -2.f * W[i] * P * DmInvT.col(0) - 2.f * W[i] * P * DmInvT.col(1);
-            TV H2 = -3.f * W[i] * P * DmInvT.col(1);
-            TV H3 =  2.f * W[i] * P * DmInvT.col(0);
-            TV H4 =  3.f * W[i] * P * DmInvT.col(0) + 3.f * W[i] * P * DmInvT.col(1);
-            TV H5 =  2.f * W[i] * P * DmInvT.col(1);
-            // std::cout << H0 + H1 + H2 + H3 + H4 + H5 << std::endl;
-            force[mesh[i](0)] += H0;
-            force[mesh[i](1)] += H1;
-            force[mesh[i](2)] += H2;
-            force[mesh[i](3)] += H3;
-            force[mesh[i](4)] += H4;
-            force[mesh[i](5)] += H5;
+            // TM DmInvT = DmInv[i].transpose();
+            // TV H0 = -3.f * W[i] * P * DmInvT.col(0);
+            // TV H1 = -2.f * W[i] * P * DmInvT.col(0) - 2.f * W[i] * P * DmInvT.col(1);
+            // TV H2 = -3.f * W[i] * P * DmInvT.col(1);
+            // TV H3 =  2.f * W[i] * P * DmInvT.col(0);
+            // TV H4 =  3.f * W[i] * P * DmInvT.col(0) + 3.f * W[i] * P * DmInvT.col(1);
+            //TV H5 =  2.f * W[i] * P * DmInvT.col(1);
+            // force[mesh[i](0)] += H0;
+            // force[mesh[i](1)] += H1;
+            // force[mesh[i](2)] += H2;
+            // force[mesh[i](3)] += H3;
+            // force[mesh[i](4)] += H4;
+            // force[mesh[i](5)] += -H0 - H1 - H2 - H3 - H4;
+            TM Ha = -3.f * W[i] * P * DmInv[i].transpose();
+            TM Hb =  2.f * W[i] * P * DmInv[i].transpose();
+            force[mesh[i](0)] += Ha.col(0);
+            force[mesh[i](2)] += Ha.col(1);
+            force[mesh[i](4)] += -Ha.col(0) - Ha.col(1);
+            force[mesh[i](1)] += -Hb.col(0) - Hb.col(1);
+            force[mesh[i](3)] += Hb.col(0);
+            force[mesh[i](5)] += Hb.col(1);
         }
 
         // update velocity and advect node
@@ -160,9 +168,12 @@ void FemQuadSim<T, dim>::initialize()
         // [3y_0 + 2y_1 - 2y_3 - 3y_5, 2y_1 + 3y_2 - 3y_4 - 2y_5]
         Dm.col(0) = 3.f * positions[X(0)] + 2.f * positions[X(1)] - 2.f * positions[X(3)] - 3.f * positions[X(4)];
         Dm.col(1) = 2.f * positions[X(1)] + 3.f * positions[X(2)] - 3.f * positions[X(4)] - 2.f * positions[X(5)];
-        std::cout << Dm << std::endl;
         DmInv.push_back(Dm.inverse());
-        T thisW = Dm.determinant();
+        // area
+        TM a = TM::Zero();
+        a.col(0) = positions[X(0)] - positions[X(5)];
+        a.col(1) = positions[X(3)] - positions[X(5)];
+        T thisW = a.determinant();
         if (thisW < 0.f)
             thisW *= -1;
         W.push_back(thisW);
