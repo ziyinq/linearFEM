@@ -122,36 +122,14 @@ template <class T, int dim>
 void FemQuadSim<T, dim>::initialize()
 {
     /// FIRST STEP: precompute Dm, H at quadrature points
-    /// N1=2k^2-k, N2=2e^2-2, N3=1-3k-3e+4ke+2e^2+2k^2, N4=4ke, N5=4e-4ke-4e^2, N6=4k-4ke-4k^2 
-    // H evaluated at 3 quadrature points
-    // H1 = [5/3 2/3    0 -2/3 1/3   -2]^T
-    //      [0   8/3 -1/3    0 1/3 -8/3]
-    // H2 = [-1/3 8/3    0 -8/3 1/3    0]^T
-    //      [0    2/3  5/3   -2 1/3 -2/3]
-    // H3 = [-1/3 2/3    0 -2/3 -5/3    2]^T
-    //    = [0    2/3 -1/3    2 -5/3 -2/3]
     H1 = TH::Zero();
     H2 = TH::Zero();
     H3 = TH::Zero();
-    // H1.col(0) << 5.f / 3.f, 2.f / 3.f, 0, -2.f / 3.f, 1.f / 3.f, -2.f;
-    // H1.col(1) << 0, 8.f / 3.f, -1.f / 3.f, 0, 1.f / 3.f, -8.f / 3.f;
-    // H2.col(0) << -1.f / 3.f, 8.f / 3.f, 0, -8.f / 3.f, 1.f / 3.f, 0;
-    // H2.col(1) << 0, 2.f / 3.f, 5.f / 3.f, -2.f, 1.f / 3.f, -2.f / 3.f;
-    // H3.col(0) << -1.f / 3.f, 2.f / 3.f, 0, -2.f / 3.f, -5.f / 3.f, 2.f;
-    // H3.col(1) << 0, 2.f / 3.f, -1.f / 3.f, 2.f, -5.f / 3.f, -2.f / 3.f;
     H1 = computeH(2.f/3.f, 1.f/6.f);
     H2 = computeH(1.f/6.f, 2.f/3.f);
     H3 = computeH(1.f/6.f, 1.f/6.f);
 
-    // shape function evaluated at 6 nodes for 3 quadrature points
-    // Na = [2/9 4/9 -1/9 1/9 -1/9 4/9]
-    // Nb = [-1/9 4/9 2/9 4/9 -1/9 1/9]
-    // Nc = [-1/9 1/9 -1/9 4/9 2/9 4/9]
-    // TN N = TN::Zero();
-    // N.col(0) << 2.f / 9.f, 4.f / 9.f, -1.f / 9.f, 1.f / 9.f, -1.f / 9.f, 4.f / 9.f;
-    // N.col(1) << -1.f / 9.f, 4.f / 9.f, 2.f / 9.f, 4.f / 9.f, -1.f / 9.f, 1.f / 9.f;
-    // N.col(2) << -1.f / 9.f, 1.f / 9.f, -1.f / 9.f, 4.f / 9.f, 2.f / 9.f, 4.f / 9.f;
-
+    // 6 quadrature points for mass matrix
     Eigen::Matrix<T, 6, 3> xw = Eigen::Matrix<T, 6, 3>::Zero();
     xw.row(0) << 0.44594849091597, 0.44594849091597, 0.22338158967801;
     xw.row(1) << 0.44594849091597, 0.10810301816807, 0.22338158967801;
@@ -291,6 +269,11 @@ void FemQuadSim<T, dim>::startSimulation()
         // update velocity and advect node
         advection(step);
         writeFrame(step);
+        if (step == 250)
+        {
+            getData(step);
+            std::cout << " Output Quad data for frame" << step << "! " << std::endl;
+        }
     }
 }
 
@@ -430,6 +413,19 @@ void FemQuadSim<T, dim>::writeFrame(int frameNum)
     Partio::write(particleFile.c_str(), *parts);
     parts->release();
     //std::cout << "=====Writing Frame " << frameNum << "!=====" << std::endl;
+}
+
+template <class T, int dim>
+void FemQuadSim<T,dim>::getData(int c)
+{
+    std::ofstream fs;
+    std::string objFile = "../data/quad/quadFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
+    fs.open(objFile.c_str());
+    for (auto p : positions)
+    {
+        fs << p(0) << " " << p(1) << std::endl;
+    }
+    fs.close();
 }
 
 template class FemQuadSim<float, 2>;

@@ -25,6 +25,7 @@ class FemQuadSim
     void startSimulation();
     void buildForce(int c);
     void advection(int c);
+    void getData(int c);
     void writeFrame(int framNum);
     Eigen::Matrix<T, 6, 1> computeN(T x, T y);
     Eigen::Matrix<T, 6, dim> computeH(T x, T y);

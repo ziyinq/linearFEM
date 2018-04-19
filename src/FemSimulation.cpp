@@ -139,9 +139,13 @@ void FemSimulation<T,dim>::startSimulation(){
         forceVec = Eigen::MatrixXf::Zero(nodeNum, 2);
 
         buildForce(step);
-    
         advection(step);
         writeFrame(step);
+        if (step == 250)
+        {
+            getData(step);
+            std::cout << " Output linear data for frame" << step << "! " << std::endl;
+        }
     }
 }
 
@@ -242,6 +246,47 @@ void FemSimulation<T,dim>::writeFrame(int frameNum){
     Partio::write(particleFile.c_str(), *parts);
     parts->release();
     // std::cout << "=====Writing Frame " << frameNum << "!=====" << std::endl;
+}
+
+template <class T, int dim>
+void FemSimulation<T, dim>::getData(int c)
+{
+    int xdim = 10;
+    int ydim = 4;
+    // data
+    std::ofstream fs;
+    std::string objFile = "../data/linear/linearFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
+    fs.open(objFile.c_str());
+    for (int i = 0; i < xdim; i++)
+    {
+        for (int j = 0; j < ydim; j++)
+        {
+            int index = i * ydim + j;
+            fs << positions[index](0) << " " << positions[index](1) << std::endl;
+            if (j != ydim-1)
+            {
+                TV midPos = 0.5f * positions[index] + 0.5f * positions[index + 1];
+                fs << midPos(0) << " " << midPos(1) << std::endl;
+            }
+        }
+        if ( i != xdim-1)
+        {
+            for (int k = 0; k < ydim; k++)
+            {
+                int index = i * ydim + k;
+                int midIdx = index + ydim;
+                int crossIdx = midIdx + 1;
+                TV midPos = 0.5f * positions[index] + 0.5f * positions[midIdx];
+                fs << midPos(0) << " " << midPos(1) << std::endl;
+                if (k != ydim -1)
+                {
+                    TV crossPos = 0.5f * positions[index] + 0.5f * positions[crossIdx];
+                    fs << crossPos(0) << " " << crossPos(1) << std::endl;
+                }
+            }
+        }
+    }
+    fs.close();
 }
 
 template class FemSimulation<float, 2>;
