@@ -11,14 +11,14 @@ public:
     using TV = Eigen::Matrix<T,dim,1>;
     using TM = Eigen::Matrix<T,dim,dim>;
 
-    FemSimulation(){}
-    ~FemSimulation(){}
+    FemSimulation(T dt, T E): dt(dt), E(E) {}
+    ~FemSimulation() {}
 
     void createMesh();
     void initialize();
     void startSimulation();
-    void buildForce();
-    void advection();
+    void buildForce(int c);
+    void advection(int c);
     void writeFrame(int framNum);
     TM linearPiola(TM F);
     TM neohookeanPiola(TM F);
@@ -42,11 +42,14 @@ public:
     TV gravity = TV(0, -9.8);
 
     // simulation settings
-    T dt = 1e-3;
+    T dt;
     int numSteps = 300;
 
     // Young's modulus and Poisson's ratio
-    T E = 1e4;
+    T E;
     T nu = 0.3;
     T mu, lambda;
+
+    // Cholesky solver
+    Eigen::LDLT<Eigen::MatrixXf> ldlt;
 };

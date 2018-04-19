@@ -224,11 +224,46 @@ void FemQuadSim<T, dim>::initialize()
         fs << "\n";
     }
 
+    // write .obj file
+    std::ofstream ply;
+    std::string plyFile = "../output/quadMesh.ply";
+    ply.open(plyFile);
+    ply << "ply"
+        << "\n";
+    ply << "format ascii 1.0"
+        << "\n";
+    ply << "element vertex " << nodeNum << "\n";
+    ply << "property float32 x" << "\n";
+    ply << "property float32 y" << "\n";
+    ply << "element face " << mesh.size() << "\n";
+    ply << "property list uint8 int32 vertex_indices"
+        << "\n";
+    ply << "end_header"
+        << "\n";
+    for (auto X : positions)
+    {
+        for (int i = 0; i < dim; i++)
+            ply << X(i) << " ";
+        ply << "\n";
+    }
+    for (auto F : mesh)
+    {
+        ply << "6 ";
+        for (int i = 0; i < 6; i++)
+            ply << F(i) << " ";
+        ply << "\n";
+    }
+    ply.close();
+
+    // check if mass matrix is SPD
     Eigen::LLT<Eigen::MatrixXf> lltOfA(massM); // compute the Cholesky decomposition of A
     if (lltOfA.info() == Eigen::NumericalIssue)
     {
         throw std::runtime_error("Possibly non semi-positive definitie matrix!");
     }
+
+    // pre decompose the mass matrix
+    ldlt.compute(massM);
 
     // set velocity to be zero
     std::fill(velocities.begin(), velocities.end(), TV::Zero());
@@ -241,7 +276,7 @@ void FemQuadSim<T, dim>::initialize()
 template <class T, int dim>
 void FemQuadSim<T, dim>::startSimulation()
 {
-    std::cout << "======Simulation Starts!=====" << std::endl;
+    std::cout << "======Quadratic Simulation Starts!=====" << std::endl;
     createMesh();
     // createOneMesh();
     initialize();
@@ -296,9 +331,6 @@ void FemQuadSim<T, dim>::buildForce(int c)
 template <class T, int dim>
 void FemQuadSim<T, dim>::advection(int c)
 {
-
-    Eigen::LDLT<Eigen::MatrixXf> ldlt;
-    ldlt.compute(massM);
     Eigen::MatrixXf x = ldlt.solve(forceVec);
 
     for (size_t i = 0; i < positions.size(); i++)
@@ -375,7 +407,7 @@ void FemQuadSim<T, dim>::writeFrame(int frameNum)
     //mH = parts->addAttribute("m", Partio::VECTOR, 1);
     vH = parts->addAttribute("v", Partio::VECTOR, dim);
     fH = parts->addAttribute("f", Partio::VECTOR, dim);
-    posH = parts->addAttribute("position", Partio::VECTOR, dim);
+    posH = parts->addAttribute("position", Partio::VECTOR, 3);
 
     for (unsigned int i = 0; i < positions.size(); i++)
     {
@@ -391,6 +423,7 @@ void FemQuadSim<T, dim>::writeFrame(int frameNum)
             v[k] = velocities[i](k);
             f[k] = forceVec.row(i).transpose()(k);
         }
+        p[2] = 0.f;
     }
 
     std::string particleFile = "../output/quadframe" + std::to_string(frameNum) + ".bgeo";

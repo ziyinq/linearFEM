@@ -16,7 +16,7 @@ class FemQuadSim
     using TN = Eigen::Matrix<T, 6, 3>;
     using TMassN = Eigen::Matrix<T, 6, 1>;
 
-    FemQuadSim() {}
+    FemQuadSim(T dt, T E): dt(dt), E(E) {}
     ~FemQuadSim() {}
 
     void createMesh();
@@ -52,11 +52,14 @@ class FemQuadSim
     TV gravity = TV(0, -9.8);
 
     // simulation settings
-    T dt = 1e-3;
+    T dt;
     int numSteps = 300;
 
     // Young's modulus and Poisson's ratio
-    T E = 1e4;
+    T E;
     T nu = 0.3;
     T mu, lambda;
+
+    // Cholesky solver
+    Eigen::LDLT<Eigen::MatrixXf> ldlt;
 };

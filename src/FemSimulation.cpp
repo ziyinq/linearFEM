@@ -40,7 +40,7 @@ void FemSimulation<T,dim>::createMesh(){
 
     // write .obj file
     std::ofstream fs;
-    std::string objFile = "../output/mesh.obj";
+    std::string objFile = "../output/linearMesh.obj";
     fs.open(objFile);
     for (auto X : positions)
     {
@@ -111,11 +111,15 @@ void FemSimulation<T, dim>::initialize()
         fs << "\n";
     }
 
+    // check if mass matrix is SPD
     Eigen::LLT<Eigen::MatrixXf> lltOfA(massM); // compute the Cholesky decomposition of A
     if (lltOfA.info() == Eigen::NumericalIssue)
     {
         throw std::runtime_error("Possibly non semi-positive definitie matrix!");
     }
+
+    // pre decompose mass matrix
+    ldlt.compute(massM);
 
     // set velocity to be zero
     std::fill(velocities.begin(), velocities.end(), TV::Zero());
@@ -127,40 +131,22 @@ void FemSimulation<T, dim>::initialize()
 
 template<class T, int dim>
 void FemSimulation<T,dim>::startSimulation(){
-    std::cout << "======Simulation Starts!=====" << std::endl;
+    std::cout << "======Linear Simulation Starts!=====" << std::endl;
     createMesh();
     initialize();
     for (int step = 0; step < numSteps; step++){
         // reset force to be gravity
         forceVec = Eigen::MatrixXf::Zero(nodeNum, 2);
-        buildForce();
-        
-        // calculate force
-        // for (size_t i = 0; i < mesh.size(); i++){
-        //     TM Ds = TM::Zero();
-        //     for (int j = 0; j < dim; j++){
-        //         Ds.col(j) = positions[mesh[i](j)] - positions[mesh[i](dim)];
-        //     }
-        //     TM F = Ds*DmInv[i];
-        //     TM P = neohookeanPiola(F);
-        //     TM H = -W[i]*P*DmInv[i].transpose();
-        //     //std::cout << H << std::endl << std::endl;;
-        //     TV lastForce = TV::Zero();
-        //     for (int k = 0; k < dim; k++){
-        //         force[mesh[i](k)] += H.col(k);
-        //         lastForce += H.col(k);
-        //     }
-        //     force[mesh[i](dim)] -= lastForce;
-        // }
 
-        // update velocity and advect node
-        advection();
+        buildForce(step);
+    
+        advection(step);
         writeFrame(step);
     }
 }
 
 template <class T, int dim>
-void FemSimulation<T, dim>::buildForce()
+void FemSimulation<T, dim>::buildForce(int c)
 {
     for (unsigned int i = 0; i < mesh.size(); i++)
     {
@@ -176,18 +162,21 @@ void FemSimulation<T, dim>::buildForce()
 
         for (int k = 0; k < 3; k++)
         {
-            forceVec.row(mesh[i](k)) += dt * H.col(k);
-            if (k==2)
+            if (k<2)
+            {
+                forceVec.row(mesh[i](k)) += dt * H.col(k);
+            }
+            else
+            {
                 forceVec.row(mesh[i](k)) += dt * lastForce;
+            }
         }
     }
 }
 
 template<class T, int dim>
-void FemSimulation<T,dim>::advection()
+void FemSimulation<T,dim>::advection(int c)
 {
-    Eigen::LDLT<Eigen::MatrixXf> ldlt;
-    ldlt.compute(massM);
     Eigen::MatrixXf x = ldlt.solve(forceVec);
 
     for (size_t i = 0; i < positions.size(); i++){
@@ -231,7 +220,7 @@ void FemSimulation<T,dim>::writeFrame(int frameNum){
     // mH = parts->addAttribute("m", Partio::VECTOR, 1);
     vH = parts->addAttribute("v", Partio::VECTOR, dim);
     fH = parts->addAttribute("f", Partio::VECTOR, dim);
-    posH = parts->addAttribute("position", Partio::VECTOR, dim);
+    posH = parts->addAttribute("position", Partio::VECTOR, 3);
 
     for (unsigned int i = 0; i < positions.size(); i++)
     {
@@ -246,6 +235,7 @@ void FemSimulation<T,dim>::writeFrame(int frameNum){
             v[k] = velocities[i](k);
             f[k] = forceVec.row(i).transpose()(k);
         }
+        p[2] = 0;
     }
 
     std::string particleFile = "../output/frame" + std::to_string(frameNum) + ".bgeo";
