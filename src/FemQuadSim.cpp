@@ -213,7 +213,7 @@ void FemQuadSim<T, dim>::initialize()
 
     // write .obj file
     std::ofstream fs;
-    std::string objFile = "../massMatrix.txt";
+    std::string objFile = "../quadMassMatrix.txt";
     fs.open(objFile);
     for (int i = 0; i < nodeNum; i++)
     {

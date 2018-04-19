@@ -12,5 +12,5 @@ int main()
     FemQuadSim<T, dim> quadSim;
     FemSimulation<T, dim> linearSim;
     // linearSim.startSimulation();
-    quadSim.startSimulation();
+    linearSim.startSimulation();
 }

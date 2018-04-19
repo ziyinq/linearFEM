@@ -52,7 +52,7 @@ class FemQuadSim
     TV gravity = TV(0, -9.8);
 
     // simulation settings
-    T dt = 5e-4;
+    T dt = 1e-3;
     int numSteps = 300;
 
     // Young's modulus and Poisson's ratio

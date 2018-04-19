@@ -17,6 +17,7 @@ public:
     void createMesh();
     void initialize();
     void startSimulation();
+    void buildForce();
     void advection();
     void writeFrame(int framNum);
     TM linearPiola(TM F);
@@ -26,13 +27,15 @@ public:
     std::vector<Eigen::Matrix<int, dim + 1, 1>> mesh;
     std::vector<TV> positions;
     std::vector<TV> velocities;
-    std::vector<TV> force;
-    std::vector<T> mass;
     std::vector<int> boundaryIdx;
 
+    Eigen::MatrixXf massM;
+    Eigen::MatrixXf forceVec;
     std::vector<TM> DmInv;
     std::vector<T> W;
+    std::vector<TV> force;
 
+    int nodeNum;
     T density = 100;
     T width = 0.9;
     T height = 0.3;
