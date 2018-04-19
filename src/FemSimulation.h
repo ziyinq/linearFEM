@@ -20,6 +20,7 @@ public:
     void advection();
     void writeFrame(int framNum);
     TM linearPiola(TM F);
+    TM neohookeanPiola(TM F);
 
   private:
     std::vector<Eigen::Matrix<int, dim + 1, 1>> mesh;

@@ -11,28 +11,41 @@ class FemQuadSim
   public:
     using TV = Eigen::Matrix<T, dim, 1>;
     using TM = Eigen::Matrix<T, dim, dim>;
+    using TH = Eigen::Matrix<T, 6, dim>;
+    using TD = Eigen::Matrix<T, dim, 6>;
+    using TN = Eigen::Matrix<T, 6, 3>;
+    using TMassN = Eigen::Matrix<T, 6, 1>;
 
     FemQuadSim() {}
     ~FemQuadSim() {}
 
     void createMesh();
+    void createOneMesh();
     void initialize();
     void startSimulation();
-    void advection();
+    void buildForce(int c);
+    void advection(int c);
     void writeFrame(int framNum);
+    Eigen::Matrix<T, 6, 1> computeN(T x, T y);
+    Eigen::Matrix<T, 6, dim> computeH(T x, T y);
     TM linearPiola(TM F);
+    TM neohookeanPiola(TM F);
 
   private:
     std::vector<Eigen::Matrix<int, 6, 1>> mesh;
     std::vector<TV> positions;
     std::vector<TV> velocities;
-    std::vector<TV> force;
-    std::vector<T> mass;
     std::vector<int> boundaryIdx;
 
-    std::vector<TM> DmInv;
-    std::vector<T> W;
+    TH H1, H2, H3;
+    std::vector<TH> massH;
+    std::vector<TMassN> massN;
+    std::vector<TM> DmHInv;
+    std::vector<T> DmHDet;
+    Eigen::MatrixXf massM;
+    Eigen::MatrixXf forceVec;
 
+    int nodeNum;
     T density = 100;
     T width = 0.9;
     T height = 0.3;

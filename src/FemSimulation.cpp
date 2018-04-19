@@ -78,7 +78,7 @@ void FemSimulation<T,dim>::startSimulation(){
                 Ds.col(j) = positions[mesh[i](j)] - positions[mesh[i](dim)];
             }
             TM F = Ds*DmInv[i];
-            TM P = linearPiola(F);
+            TM P = neohookeanPiola(F);
             TM H = -W[i]*P*DmInv[i].transpose();
             //std::cout << H << std::endl << std::endl;;
             TV lastForce = TV::Zero();
@@ -131,9 +131,7 @@ void FemSimulation<T, dim>::initialize()
         W.push_back(thisW);
 
         // estimate mass
-        // TODO: need modify if quadratic
         T thismass = thisW * density / 3;
-        // TODO: fix if not linear FEM
         for (int i = 0; i < dim + 1; i++)
         {
             mass[X(i)] += thismass;
@@ -152,6 +150,15 @@ template<class T, int dim>
 Eigen::Matrix<T,dim,dim> FemSimulation<T,dim>::linearPiola(TM F){
     // P(F) = mu * (F + F^T - 2I) + lambda * tr(F - I)*I
     TM P = mu*(F + F.transpose() - 2*TM::Identity()) + lambda * (F.trace() - dim) * TM::Identity();
+    return P;
+}
+
+template <class T, int dim>
+Eigen::Matrix<T, dim, dim> FemSimulation<T, dim>::neohookeanPiola(TM F)
+{
+    // P(F) = mu * (F - F^-T) + lambda * log(J) * F^-T
+    TM FinvT = F.inverse().transpose();
+    TM P = mu * (F - FinvT) + lambda * log(F.determinant()) * FinvT;
     return P;
 }
 
