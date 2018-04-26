@@ -10,9 +10,12 @@ int main()
     // FemSimulation<T, dim> sim;
     // sim.createMesh();
     T dt = 1e-3;
-    T Youngs = 1.5e4;
-    FemQuadSim<T, dim> quadSim(dt, Youngs);
+    T Youngs = 1.1e5;
+
+    // FemQuadSim<T, dim> quadSim(dt, Youngs);
+    // quadSim.startSimulation();
+
     FemSimulation<T, dim> linearSim(dt, Youngs);
     linearSim.startSimulation();
-    quadSim.startSimulation();
+
 }
