@@ -1,3 +1,4 @@
 build/
 output/
 src/linearFEM
+python/*.pyc
