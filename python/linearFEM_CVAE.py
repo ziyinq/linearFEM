@@ -14,13 +14,14 @@ import matplotlib.pyplot as plt
 from pyDOE import lhs
 from mymodel import CVAE
 
-trainpath = '../data/linear/training'
-testpath = '../data/linear/test'
+trainpath = '../data/linear/training/'
+testpath = '../data/linear/test/'
 
 np.random.seed(1234)
     
 if __name__ == "__main__":
     
+    # Get trainning data
     X = []
     Y = []
     onlyfiles = [f for f in listdir(trainpath) if isfile(join(trainpath, f))]
@@ -31,9 +32,24 @@ if __name__ == "__main__":
         X.append(Youngs)
         Y.append(data.flatten())
         
+    # Get test data
+    testX = []
+    testY = []
+    onlyfiles = [f for f in listdir(testpath) if isfile(join(testpath, f))]
+    for name in onlyfiles:
+        Youngs = float(name[15:-4])
+        # skip boundary fixed points
+        data = loadtxt(testpath+name, skiprows = 7)
+        testX.append(Youngs)
+        testY.append(data.flatten())
+        
     X = np.asarray(X)
     X = X.reshape(X.shape[0],1)
     Y = np.asarray(Y)
+    
+    testX = np.asarray(testX)
+    testX = testX.reshape(testX.shape[0],1)
+    testY = np.asarray(testY)
     
     X_dim = 1
     Y_dim = Y.shape[1]
@@ -50,15 +66,17 @@ if __name__ == "__main__":
     # Training
     model.train(nIter = 5000, batch_size = Y.shape[0])
       
-    testnum = 7
-    truedata = Y[testnum]
-    testdata = X[testnum]
-    testdata = np.reshape(testdata,(1,1))
-    samples = model.generate_samples(testdata,1)
+    # plot
+    testnum = 2
+    truedata = testY[testnum]
+    inputdata = testX[testnum]
+    inputdata = np.reshape(inputdata,(1,1))
+    CVAE_data = model.generate_samples(inputdata,1)
     
-    test = samples[0]
+    CVAE_data = CVAE_data[0]
     plt.figure(1)
-    plt.scatter(test[0,0::2], test[0,1::2], c='b')
+    plt.scatter(CVAE_data[0,0::2], CVAE_data[0,1::2], c='b')
     plt.scatter(truedata[0::2], truedata[1::2], c='r', marker='x')
     plt.legend(('CVAE data', 'Ground Truth'))
+    plt.title('Youngs Modulus: ' + str(inputdata[0,0]))
     plt.show()

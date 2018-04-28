@@ -255,7 +255,8 @@ void FemSimulation<T, dim>::getData(int c)
     int ydim = 4;
     // data
     std::ofstream fs;
-    std::string objFile = "../data/linear/linearFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
+    // std::string objFile = "../data/linear/training/linearFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
+    std::string objFile = "../data/linear/test/linearFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
     fs.open(objFile.c_str());
     for (int i = 0; i < xdim; i++)
     {
