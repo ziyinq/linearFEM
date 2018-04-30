@@ -7,11 +7,13 @@ Created on Sat Apr 28 14:42:01 2018
 """
 
 import torch
-from torch.autograd import Variable, grad
+from torch.autograd import Variable
+import torch.utils.data
+from autograd import grad
 import numpy as np
 import timeit
 
-class CVAE:
+class CVAE(torch.nn.Module):
     def __init__(self, X, Y, layers_P, layers_Q, layers_R):
         
         # Check if there is a GPU available
@@ -46,20 +48,24 @@ class CVAE:
         
         # Initialize decoder
         params = np.concatenate([params, self.initialize_NN(layers_Q)])
+#        params = torch.cat([params, self.initialize_NN(layers_Q)])
         self.idx_Q = np.arange(self.idx_P[-1]+1, params.shape[0])
         
         # Initialize prior
         params = np.concatenate([params, self.initialize_NN(layers_R)])
+#        params = torch.cat([params, self.initialize_NN(layers_R)])
         self.idx_R = np.arange(self.idx_Q[-1]+1, params.shape[0])
                 
-        self.params = params
+        params = torch.from_numpy(params).type(self.dtype)
+#        params = Variable(params, requires_grad=True)
+        self.params = Variable(params, requires_grad=True)
         
         # Total number of parameters
         self.num_params = self.params.shape[0]
         
         # Define optimizer
         # self.optimizer = Adam(self.num_params, lr = 1e-3)
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam([self.params], lr=1e-3)
         
         # Define gradient function using autograd 
         self.grad_elbo = grad(self.ELBO)
@@ -81,6 +87,8 @@ class CVAE:
         b = np.zeros((1,Q[-1]))
         hyp = np.concatenate([hyp, A.ravel(), b.ravel()])
         
+#        hyp = torch.from_numpy(hyp).type(self.dtype)
+#        hyp = Variable(hyp, requires_grad=True)
         return hyp
         
     
@@ -94,6 +102,10 @@ class CVAE:
             idx_3 = idx_2 + Q[layer+1]
             A = np.reshape(params[idx_1:idx_2], (Q[layer],Q[layer+1]))
             b = np.reshape(params[idx_2:idx_3], (1,Q[layer+1]))
+            A = torch.from_numpy(A).type(self.dtype)
+            A = Variable(A, requires_grad=False)
+            b = torch.from_numpy(b).type(self.dtype)
+            b = Variable(b, requires_grad=False)
             H = np.tanh(np.matmul(H,A) + b)
             
         idx_1 = idx_3
@@ -151,11 +163,9 @@ class CVAE:
     
 
     # Fetches a mini-batch of data
-    def fetch_minibatch(self,X,Y, N_batch):
-        N = X.shape[0]
-        idx = np.random.choice(N, N_batch, replace=False)
-        X_batch = X[idx,:]
-        Y_batch = Y[idx,:]
+    def fetch_minibatch(self,X, Y, N_batch):
+        X_batch = X
+        Y_batch = Y
         return X_batch, Y_batch
     
     
@@ -185,6 +195,8 @@ class CVAE:
       
     def generate_samples(self, X_star, N_samples):
         X_star = (X_star - self.Xmean) / self.Xstd
+        X_star = torch.from_numpy(X_star).type(self.dtype)
+        X_star = Variable(X_star, requires_grad=False)
         # Encode X_star
         mu_0, Sigma_0 = self.forward_pass(X_star, 
                                           self.layers_R, 
@@ -198,7 +210,8 @@ class CVAE:
         mean_star, var_star = self.forward_pass(np.concatenate([X_star, Z], axis = 1), 
                                                 self.layers_P, 
                                                 self.params[self.idx_P]) 
-             
+        mean_star = mean_star.data.numpy()
+        var_star = var_star.data.numpy()
         # De-normalize
         mean_star = mean_star*self.Ystd + self.Ymean
         var_star = var_star*self.Ystd**2

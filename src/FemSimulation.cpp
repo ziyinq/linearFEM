@@ -144,6 +144,7 @@ void FemSimulation<T,dim>::startSimulation(){
         if (step == 250)
         {
             getData(step);
+            // getOriginData(step);
             std::cout << " Output linear data for frame" << step << "! " << std::endl;
         }
     }
@@ -246,6 +247,19 @@ void FemSimulation<T,dim>::writeFrame(int frameNum){
     Partio::write(particleFile.c_str(), *parts);
     parts->release();
     // std::cout << "=====Writing Frame " << frameNum << "!=====" << std::endl;
+}
+
+template <class T, int dim>
+void FemSimulation<T, dim>::getOriginData(int c)
+{
+    std::ofstream fs;
+    std::string objFile = "../data/linear/origin/linearFrame" + std::to_string(c) + "E" + std::to_string((int)E) + ".txt";
+    fs.open(objFile.c_str());
+    for (auto p : positions)
+    {
+        fs << p(0) << " " << p(1) << std::endl;
+    }
+    fs.close();
 }
 
 template <class T, int dim>

@@ -20,6 +20,7 @@ public:
     void buildForce(int c);
     void advection(int c);
     void getData(int c);
+    void getOriginData(int c);
     void writeFrame(int framNum);
     TM linearPiola(TM F);
     TM neohookeanPiola(TM F);
