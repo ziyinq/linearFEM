@@ -65,10 +65,10 @@ if __name__ == "__main__":
     model = CVAE(X, Y, layers_P, layers_Q, layers_R) 
     
     # Training
-    model.train(nIter = 5000, batch_size = Y.shape[0])
+    ELBO, iteration = model.train(nIter = 20000, batch_size = Y.shape[0])
       
     # plot
-    testnum = 2
+    testnum = 0
     truedata = testY[testnum]
     inputdata = testX[testnum]
     inputdata = np.reshape(inputdata,(1,1))
@@ -78,6 +78,13 @@ if __name__ == "__main__":
     plt.figure(1)
     plt.scatter(CVAE_data[0,0::2], CVAE_data[0,1::2], c='b')
     plt.scatter(truedata[0::2], truedata[1::2], c='r', marker='x')
-    plt.legend(('CVAE data', 'Ground Truth'))
+    plt.legend(('Prediction', 'Ground Truth'))
     plt.title('Youngs Modulus: ' + str(inputdata[0,0]))
+    plt.show()
+    
+    plt.figure(2)
+    plt.plot(iteration, ELBO)
+    plt.xlabel('Iteration')
+    plt.ylabel('ELBO')
+    plt.title('Convergence Plot')
     plt.show()

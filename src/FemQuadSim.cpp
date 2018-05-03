@@ -269,11 +269,11 @@ void FemQuadSim<T, dim>::startSimulation()
         // update velocity and advect node
         advection(step);
         writeFrame(step);
-        // if (step == 250)
-        // {
-        //     getData(step);
-        //     std::cout << " Output Quad data for frame" << step << "! " << std::endl;
-        // }
+        if (step == 250)
+        {
+            getData(step);
+            std::cout << " Output Quad data for frame" << step << "! " << std::endl;
+        }
     }
 }
 
