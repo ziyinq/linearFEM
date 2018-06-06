@@ -9,6 +9,7 @@ from os import listdir
 from os.path import isfile, join
 from numpy import loadtxt
 import numpy as np
+import torch
 
 from CVAEcuda import CVAE
 import matplotlib.pyplot as plt
@@ -63,7 +64,8 @@ if __name__ == "__main__":
     layers_R = [X_dim, h_dim, h_dim, Z_dim]
     
     model = CVAE(X, Y, layers_P, layers_Q, layers_R) 
-    
+    if torch.cuda.is_available() == False:
+        model.cuda()
     # Training
     ELBO, iteration = model.train(nIter = 20000, batch_size = Y.shape[0])
       

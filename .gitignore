@@ -2,3 +2,4 @@ build/
 output/
 src/linearFEM
 python/*.pyc
+python/__pycache__/
