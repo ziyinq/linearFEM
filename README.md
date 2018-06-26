@@ -9,7 +9,7 @@ cmake ..
 ```
 then type
 ```
-build
+make
 ```
 and a executable file will generated in the src folder
 * modify the main.cpp to use linear or quadratic FEM simulation under different Young's modulus
