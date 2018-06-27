@@ -1,5 +1,7 @@
 # linearFEM
 
+Techniqal detail please refer to the [report](report.pdf)
+
 Compile
 =================
 * This simulation code is built based on camke and C++
